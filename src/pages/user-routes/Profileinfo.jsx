@@ -26,6 +26,7 @@ function Profileinfo() {
   }, []);
 
 
+  const userView=()=>
 
   return (
     <Base>
@@ -51,6 +52,13 @@ function Profileinfo() {
         <p>
          <span  style={{color:"Green",fontSize:'18px'}} >About:-</span>{user && user.about && user.about } 
         </p>
+
+        
+{useContextData.user.login && user.Id==post.userId?
+<Button onClick={()=>DoDeletePost(post)} color='danger'  className='ms-2' style={{ height: '19px ',width: '76px ',padding: '0px ', fontSize:'11px',color:'Yellow'}}>Delete</Button> :''
+}
+
+
          
    </CardText>
       </CardBody>
