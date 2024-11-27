@@ -1,0 +1,394 @@
+Part 2:-
+//Note
+1.when we logout the application,still showing delete options above the post?
+2.to overcome this situation we will use global state/context api
+
+3. when we login we will set the login details to the global state using context api in Pages-->Login.jsx.
+
+4.after logout we will again set the global state using context api in CustomeNavBar.jsx file 
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Full code(Overview):-
+
+1.Context-->UserProvide.jsx:-
+
+import React, { useEffect, useState } from 'react'
+import userContext from './userContext'
+
+function UserProvider({children}) {
+
+
+  const[user,setUser]=useState({
+    data:{},
+    login:false
+  });
+
+  // useEffect(()=>{
+  //   setUser({
+  //     name:'Bhujveer Singh'
+  //   })
+  // },[]); //it will called on mounting phase only
+
+  return (
+   <userContext.Provider value={{user,setUser}}>
+    {children}
+   </userContext.Provider>
+  )
+}
+
+export default UserProvider
+
+
+
+2.Pages-->Login.jsx
+import { useState,useContext } from "react";
+
+import userContext from "../context/userContext";
+
+
+const useContextData=useContext(userContext);
+
+
+ useContextData.setUser({
+   data:jwtTokenDatawithUserDetails.user,
+   login:true
+});
+
+
+
+3.components-->CustomeNavBar.jsx
+import { useState,useContext } from "react";
+
+import userContext from "../context/userContext";
+
+
+  const useContextData=useContext(userContext);
+
+ 
+useContextData.setUser({
+  data:null,
+  login:false
+});
+
+4.components-->Posts.jsx:-
+
+import { useState,useContext } from "react";
+
+import userContext from "../context/userContext";
+
+
+
+{useContextData.user.login && user.Id==post.userId?
+<Button onClick={()=>DoDeletePost(post)} color='danger'  className='ms-2' style={{ height: '19px ',width: '76px ',padding: '0px ', fontSize:'11px',color:'Yellow'}}>Delete</Button> :''
+}
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+//Full Code(Completed)
+
+Pages-->Login.jsx:-
+
+import { useState,useContext } from "react";
+import Base from "../components/Base";
+import { Card, CardBody, CardHeader, Container, Form,FormGroup,Label,Input,Button, Row,Col } from "reactstrap";
+import { toast } from "react-toastify";
+import { loginUser } from "../services/user-service";
+import { doLogin } from "../auth";
+import { useNavigate } from "react-router-dom";
+import userContext from "../context/userContext";
+
+const Login=()=>{
+
+  const useContextData=useContext(userContext);
+
+  const navigate=useNavigate();
+
+  const [loginDetails,setLoginDetails]=useState({
+    username:'',
+    password:''
+  })
+
+  const handleReset=()=>{
+    setLoginDetails({
+    username:'',
+    password:''
+  })
+  }
+  
+const handleChange=(event,field)=>{
+let ActualValue=event.target.value;
+  //dynamic setting the values
+setLoginDetails({...loginDetails,[field]:ActualValue})
+}
+
+
+
+const handleFormSubmit=(event)=>{
+   event.preventDefault();
+   console.log(loginDetails);
+   //validations
+   if(loginDetails.username.trim()=='' || loginDetails.password=='')
+   {
+    toast.error("username and password is required!!!")
+    return;
+   }
+  //submit the data to send to the server to get the token
+loginUser(loginDetails).then((jwtTokenDatawithUserDetails)=>{
+
+  console.log(jwtTokenDatawithUserDetails);
+  console.log('Login Success!!');
+  toast.success("Login Success!!")
+  //=>this is returning a token and user details like given below:-  
+// token:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1bmlxdWVfbmFtZSI6ImJodWp2ZWVyMzc1QGhvdG1haWwuY29tIiwibmFtZWlkIjoiYmh1anZlZXIzNzVAaG90bWFpbC5jb20iLCJuYmYiOjE3MzAyMTk5NDcsImV4cCI6MTczMDMwNjM0NywiaWF0IjoxNzMwMjE5OTQ3fQ.cMb-_Cx08_tvw0XiYvX1IOFrHjbnub5oCztcJ7FscA4"
+// user:
+// Id:17
+// about:"dndbhhjdhgdhgd"
+// email:"bhujveer375@hotmail.com"
+// name: "sss"
+//Note:-remember this token should be encrypted but now we are using as simple as this.
+
+  setLoginDetails({
+      username:'',
+    password:''
+  })
+//saving the data to local storage on browser!
+ doLogin(jwtTokenDatawithUserDetails,()=>{
+   console.log('login details is saved to local storage!!');
+
+ useContextData.setUser({
+   data:jwtTokenDatawithUserDetails.user,
+   login:true
+});
+
+
+
+   //redirect to user dashboard page
+
+   navigate("/user/dashboard");
+})
+
+}).catch((error)=>{
+  console.log(error);
+  console.log("error log");
+  if(error.response?.status==401||error.response?.status==404) //remember this error means "AxiousError" object
+  {
+    toast.error(error.response.data.msg);
+  }
+  else
+  {
+toast.error("something went wrong on server!!")
+  }
+})
+
+};
+
+  return (
+   
+    <Base>
+       <Container>
+         <Row className="mt-4">
+           <Col sm={{size:6,offset:3}}>
+           <Card color="black" inverse>
+           <CardHeader>
+            <h3 style={{color:"green"}}>Login</h3>
+           </CardHeader>
+<CardBody>
+  {/* creating form */}
+  <Form onSubmit={handleFormSubmit}>
+
+<FormGroup>
+      <Label for="email">Enter Email:- </Label>
+      <Input type="email" placeholder="Enter Here" id="email" onChange={(e)=>handleChange(e,'username')}  value={loginDetails.username} ></Input>
+    </FormGroup>
+
+{/* for password */}
+<FormGroup>
+      <Label for="password">Enter Password</Label>
+      <Input type="password" placeholder="Enter Here" id="password" onChange={(e)=>handleChange(e,'password')}  value={loginDetails.password}></Input>
+    </FormGroup>
+
+
+
+
+<Container className="text-center">
+  <Button outline color="light" className="me-2" >Login</Button>
+   <Button  outline color="secondary" onClick={handleReset} type="reset" >Reset</Button>
+</Container>
+
+
+  </Form>
+</CardBody>
+      </Card>
+           </Col>
+         </Row>
+       </Container>
+
+
+
+
+    </Base>
+  )
+}
+
+export default Login;
+
+
+components-->CustomeNavBar.jsx
+
+
+
+import React, { useEffect, useState,useContext } from 'react';
+import { NavLink as ReactLink, useNavigate } from 'react-router-dom';  //avoid page reload, when we click on 
+//Home,Login,Or Signup
+import {doLogout} from '../auth/index';
+import userContext from "../context/userContext";
+
+
+import {
+  Collapse,
+  Navbar,
+  NavbarToggler,
+  NavbarBrand,
+  Nav,
+  NavItem,
+  NavLink,
+  UncontrolledDropdown,
+  DropdownToggle,
+  DropdownMenu,
+  DropdownItem,
+  NavbarText,
+} from 'reactstrap';
+import { isLoggedIn } from '../auth';
+import {CurrentUser} from '../auth';
+function CustomeNavBar() {
+
+  const useContextData=useContext(userContext);
+
+
+  let navigate=useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
+  const toggle = () => setIsOpen(!isOpen);
+
+  const[login,setLogin]=useState(false);
+  const[user,setUser]=useState(undefined);
+
+  useEffect(()=>
+  {
+    setLogin(isLoggedIn())
+    setUser(CurrentUser())
+  },[login]
+  );
+
+const logout=()=>
+{
+  doLogout(()=>{
+    //logged out next function calling.
+    setLogin(false); //we are setting login to false,by using useEffect it(setUser(CurrentUser())) will be called directly.becoz setlogin function changes the value of [login] thatswhy.
+ 
+useContextData.setUser({
+  data:null,
+  login:false
+});
+
+   navigate("/");
+
+  })
+}
+
+  return (
+    <div>
+      <Navbar expand={"lg"} color='success' dark fixed='' className='px-4'  >
+      <NavbarBrand tag={ReactLink} to="/">Veer Blogs</NavbarBrand>
+        <NavbarToggler onClick={toggle} />
+        <Collapse isOpen={isOpen} navbar>
+          <Nav className="me-auto" navbar>
+            
+              <NavItem>
+              <NavLink tag={ReactLink} to="/">New Feed</NavLink>
+            </NavItem>
+
+            
+            <NavItem>
+              <NavLink tag={ReactLink} to="/About">About</NavLink>
+            </NavItem>
+
+  <NavItem>
+              <NavLink tag={ReactLink} to="/Services">Services</NavLink>
+            </NavItem>
+
+             {/* <NavItem>
+              <NavLink href="/About/">About</NavLink>
+            </NavItem> */}
+
+            {/* <NavItem>
+              <NavLink href="https://github.com/reactstrap/reactstrap">
+                GitHub
+              </NavLink>
+            </NavItem> */}
+            <UncontrolledDropdown nav inNavbar>
+              <DropdownToggle nav caret>
+                Options
+              </DropdownToggle>
+              <DropdownMenu end>
+               
+                <DropdownItem tag={ReactLink} to="/ContactUs"  >Contact Us</DropdownItem>
+                 <DropdownItem href="https://facebook.com"  >Facebook</DropdownItem>
+                <DropdownItem divider />
+                <DropdownItem href="https://youtube.com" >Youtube</DropdownItem>
+              </DropdownMenu>
+            </UncontrolledDropdown>
+          </Nav>
+     
+          {
+     login && ( 
+           <>
+           
+           <Nav className="me-auto" navbar> 
+            <NavItem className='px-4'  >
+              <NavLink tag={ReactLink} to="/user/profile" >Profile Info </NavLink>
+              {/* took this from app.js route */}
+            </NavItem>
+       <NavItem>
+              {/* <NavLink>{user.email}</NavLink> */}
+                 <NavLink tag={ReactLink} to="/user/dashboard" >{user.email} </NavLink>
+            </NavItem>
+
+              <NavItem className='px-4'  >
+              <NavLink onClick={logout} >Logout </NavLink>
+            </NavItem>
+
+            </Nav>
+      </>
+            )
+    }
+  {
+     !login && ( 
+           <> <Nav className="me-auto" navbar> 
+             <NavItem>
+              <NavLink tag={ReactLink} to="/Login">Login</NavLink>
+            </NavItem>
+
+                  <NavItem>
+              <NavLink tag={ReactLink} to="/Signup">Signup</NavLink>
+            </NavItem>
+            </Nav>
+      </>
+            )
+    }
+        
+          <Nav navbar>
+
+          </Nav>
+          {/* <NavbarText>Instagram</NavbarText> */}
+        </Collapse>
+      </Navbar>
+    </div>
+  );
+}
+
+export default CustomeNavBar;
+
+

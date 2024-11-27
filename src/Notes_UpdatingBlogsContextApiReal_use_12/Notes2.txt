@@ -1,0 +1,83 @@
+//=>But there is a problem with this, when we add new post we bind the data down
+//=>to bind the data we are drilling props like given below:-
+//=>and its worrking fine,but in next lecture we will do this using context api
+//=>using context api we will create a method to bind the data and will use that in our component
+
+---------------------All steps to perfrom refreshing or binding data after adding a post
+
+
+step 1:- src-->pages-->user-routes-->userdashboard.jsx:-
+
+
+ const refreshPosts = () => {
+    setCurrentPage(1); // Reset to the first page
+    changePage(1);
+  };
+
+
+<AddPost onPostCreated={refreshPosts}/>
+
+
+
+
+Note:- we are reseting the currentPage becoz its dependent on this,check given code for reference:-
+
+const[user,setUser]=useState({})
+const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    setUser(CurrentUser());
+    changePage(currentPage);
+  }, [currentPage]);
+
+ const refreshPosts = () => {
+    setCurrentPage(1); // Reset to the first page
+    changePage(1);
+  };
+
+const changePage = (pageNumber) => {
+    // Skip if the page number exceeds TotalPages (unless TotalPages is 0 or undefined)
+    //Note:- postContent.TotalPages is greater than 0 and "pageNumber" is greater than "postContent.TotalPages" then return the function,
+    //Note:-if we want this "pageNumber > postContent.TotalPages" condition true and then return,then
+    //we will use it with "postContent.TotalPages>0" condition becoz on initial load "TotalPages" will be zero.
+
+    if (postContent.TotalPages > 0 && pageNumber > postContent.TotalPages) {
+      return;
+    }
+
+    loadAllPostsByuserId(pageNumber, postContent.PageSize,CurrentUser()?.Id)
+      .then((data) => {
+        console.log('data to ram ji', data);
+        // Only append posts that are not already in Contents to avoid duplicates
+        setPostContent((prevState) => ({
+          Contents: pageNumber === 1 ? data.Contents : [...prevState.Contents, ...data.Contents],
+          //if page ===1 then use "data.Contents" directly else use "[...prevState.Contents, ...data.Contents]" to append with existing data.  
+          LastPage: data.LastPage,
+          PageNumber: data.PageNumber,
+          PageSize: data.PageSize,
+          TotalElements: data.TotalElements,
+          TotalPages: data.TotalPages
+        }));
+      })
+      .catch((error) => {
+        toast.error('Error in loading posts pagewise');
+      });
+  };
+
+
+
+
+
+Step 2:- component-->AddPost.jsx:-
+
+-->
+const AddPost = ({onPostCreated}) => {
+  const editor = useRef(null);
+  export default AddPost;
+}
+-->
+ toast.success("Image uploaded successfully!");
+ toast.success(data.mgs); // Show success message for post creation
+ onPostCreated();
+
+

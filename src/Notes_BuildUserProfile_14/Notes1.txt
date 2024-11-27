@@ -1,0 +1,88 @@
+steps to build Profile info
+
+
+step 1:-   Profileinfo.jsx:-
+
+Old Profileinfo.jsx:-
+
+import React, { useContext, useEffect, useState } from 'react'
+import Base from '../../components/Base'
+import { Card, CardBody, CardText, Col, Container, Row } from 'reactstrap';
+import { Link, useParams } from 'react-router-dom'
+
+import userContext from '../../context/userContext';
+import { loadUserDetailsById } from '../../services/user-service';
+function Profileinfo() {
+  const {Id}=useParams();
+  const object=useContext(userContext);
+
+ 
+  return (
+    <Base>
+      <Container className='mt-5 mb-5'>
+     <Link to="/">Home</Link>
+<Row>
+  <Col md={
+    {
+      size:12
+    }
+  }
+>
+   <Card>
+      <CardBody>
+ <CardText>
+<h6  style={{color:"red"}} >
+          Welcome user:{object.user.data.name && object.user.data.name }
+          </h6>
+          <h6  style={{color:"blue"}} >
+          Email-{object.user.data.email && object.user.data.email }
+          </h6>
+        <p>
+         <span  style={{color:"Green",fontSize:'18px'}} >About:-</span>{object.user.data.about && object.user.data.about } 
+        </p>
+         
+   </CardText>
+      </CardBody>
+
+     </Card>
+</Col>
+</Row>
+</Container>
+  
+    </Base>
+  )
+}
+
+export default Profileinfo
+
+
+
+
+
+
+Note:- But we need to get the userdetails from the api not from the local storage as earlier
+So new updated code is:-
+
+
+Profileinfo.jsx:-
+
+
+
+
+
+setp 2:-App.js  ,remember paste this into user route.
+
+    <Route path='/user' element={<Privateroute/>}>
+         <Route path="dashboard" element={<Userdashboard/>}  />
+        <Route path="profile-info/:Id" element={<Profileinfo/>}  />  //Paste this
+        <Route path="update-blog/:Id" element={<UpdateBlog/>}  />
+    </Route>
+
+
+
+step 3:- CustomeNavBar.jsx:-
+
+ <NavLink tag={ReactLink} to={`/user/profile-info/${user.Id}`} >Profile Info </NavLink>
+
+
+

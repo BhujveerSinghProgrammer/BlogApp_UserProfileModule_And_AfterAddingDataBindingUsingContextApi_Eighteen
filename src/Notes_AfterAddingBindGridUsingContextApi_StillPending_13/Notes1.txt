@@ -1,0 +1,307 @@
+//Steps
+
+Step 1:- context-->postContext.jsx
+
+import { createContext } from "react";
+
+const postContext = createContext();
+
+export default postContext;
+
+
+Step 2:-context-->PostProvider.jsx
+
+
+import React, { useState, useEffect } from "react";
+import postContext from "./postContext";
+import { loadAllPostsByuserId } from "../services/post-service";
+import { toast } from "react-toastify";
+import { CurrentUser } from "../auth";
+
+const PostProvider = ({ children }) => {
+  const [postContentusingContextApi, setPostContentusingContextApi] = useState({
+    Contents: [],
+    LastPage: 0,
+    PageNumber: 1,
+    PageSize: 10,
+    TotalElements: 0,
+    TotalPages: 0,
+  });
+
+  const [currentPage, setCurrentPage] = useState(1);
+
+  useEffect(() => {
+    changePage(currentPage);
+  }, [currentPage]);
+
+  const changePage = (pageNumber) => {
+    if (postContentusingContextApi.TotalPages > 0 && pageNumber > postContentusingContextApi.TotalPages) return;
+
+    loadAllPostsByuserId(pageNumber, postContentusingContextApi.PageSize, CurrentUser()?.Id)
+      .then((data) => {
+        setPostContentusingContextApi((prevState) => ({
+          Contents: pageNumber === 1 ? data.Contents : [...prevState.Contents, ...data.Contents],
+          LastPage: data.LastPage,
+          PageNumber: data.PageNumber,
+          PageSize: data.PageSize,
+          TotalElements: data.TotalElements,
+          TotalPages: data.TotalPages,
+        }));
+      })
+      .catch(() => toast.error("Error in loading posts pagewise"));
+  };
+
+  const changePageInfiniteusingContextApi = () => {
+    if (currentPage < postContentusingContextApi.TotalPages || postContentusingContextApi.TotalPages === 0) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+
+  return (
+    <postContext.Provider value={{ postContentusingContextApi, changePageInfiniteusingContextApi,changePage }}>
+      {children}
+    </postContext.Provider>
+  );
+};
+
+export default PostProvider;
+
+
+
+
+step 3:- pages-->user-routes-->Userdashboard.jsx:-
+
+Note:-in this page we are using context api to get the data bind based on userId.
+
+import postContext from "../../context/postContext";
+
+->get data in parameters like given below:-
+
+const { postContentusingContextApi, changePageInfiniteusingContextApi,changePage } = useContext(postContext);
+
+-> returning data based on postContentusingContextApi and changePageInfiniteusingContextApi and changePage
+
+return (
+    <Base>
+    <Container>
+
+
+         <AddPost onPostCreated={changePage(1)}/>
+
+
+           <div className="container-fluid">
+      <Row>
+        <Col md={{ size: 12}}>
+         {/* <h3>Blogs Count ({postContentusingContextApi?.Contents?.length})</h3> */}
+          <h3 style={{color:'green',fontSize:'18px'}} >Blogs Count ({postContentusingContextApi?.Contents?.length?postContentusingContextApi?.Contents?.length:0})</h3>
+
+          <InfiniteScroll
+            dataLength={postContepostContentusingContextApint?.Contents?.length}
+            next={changePageInfiniteusingContextApi}
+            hasMore={postContentusingContextApi?.PageNumber < postContentusingContextApi?.TotalPages || postContentusingContextApi?.TotalPages === 0}
+            loader={<h4>Loading...</h4>}
+            endMessage={
+              <p style={{ textAlign: 'center' }}>
+                <b>Yay! You have seen it all</b>
+              </p>
+            }
+           >
+            {postContentusingContextApi?.Contents?.map((post) => (
+              <Posts post={post} key={post.Id} DoDeletePost ={DoDeletePost } />
+            ))}
+          </InfiniteScroll>
+        </Col>
+      </Row>
+    </div>
+
+
+    </Container>
+
+    </Base>
+  )
+
+
+
+
+
+App.js:-  Note:- every provider should be added in app.js filter
+
+
+    <UserProvider>
+ <PostProvider>
+
+
+
+
+ <Route path='/login' element={<Login/>} />
+  <Route path='/signup' element={<Signup/>} />
+  <Route path='/about' element={<About/>} />
+  <Route path='/services' element={<Services/>} />
+  <Route path='/contactus' element={<ContactUs/>} />
+  <Route path='/Post/:Id' element={<PostPage/>} />
+  <Route path='/categories/:Id' element={<Categories/>} /> 
+  {/* to add dynamic id we use like " <Route path='/Post/:Id' element={<PostPage/>} /> " */}
+
+{/* // for private route */}
+    <Route path='/user' element={<Privateroute/>}>
+    <Route path="dashboard" element={<Userdashboard/>}  />
+     <Route path="profile" element={<Profileinfo/>}  />
+     <Route path="update-blog/:Id" element={<UpdateBlog/>}  />
+    </Route>
+   </Routes>
+  </BrowserRouter>
+  
+  
+  </PostProvider>
+        </UserProvider>
+
+___________________________
+
+  Full code:-
+
+
+
+
+import React, { useEffect, useState } from 'react'
+import Base from '../../components/Base';
+import AddPost from '../../components/AddPost';
+import { Row, Col, Container } from 'reactstrap';
+import {CurrentUser} from '../../auth/index';
+import { loadAllPostsByuserId,DeletePost } from '../../services/post-service';
+import { toast } from 'react-toastify';
+import Posts from '../../components/Posts';
+import InfiniteScroll from 'react-infinite-scroll-component';
+import postContext from "../../context/postContext";
+
+
+
+const  Userdashboard=()=> {
+
+const { postContentusingContextApi, changePageInfiniteusingContextApi ,changePage} = useContext(postContext);
+
+// const[user,setUser]=useState({})
+
+//    const [postContent, setPostContent] = useState({
+//     Contents: [],
+//     LastPage: 0,
+//     PageNumber: 1,  // Start at page 1 (1-based)
+//     PageSize: 10,   // Default page size
+//     TotalElements: 0,
+//     TotalPages: 0
+//   });
+
+//   const [currentPage, setCurrentPage] = useState(1);
+
+//   // Fetch paged posts when the page is first loaded or page changes
+//   useEffect(() => {
+//     setUser(CurrentUser());
+//     changePage(currentPage);
+//   }, [currentPage]);
+
+//   // Handle page change
+//   const changePage = (pageNumber) => {
+//     // Skip if the page number exceeds TotalPages (unless TotalPages is 0 or undefined)
+//     //Note:- postContent.TotalPages is greater than 0 and "pageNumber" is greater than "postContent.TotalPages" then return the function,
+//     //Note:-if we want this "pageNumber > postContent.TotalPages" condition true and then return,then
+//     //we will use it with "postContent.TotalPages>0" condition becoz on initial load "TotalPages" will be zero.
+
+//     if (postContent.TotalPages > 0 && pageNumber > postContent.TotalPages) {
+//       return;
+//     }
+
+//     loadAllPostsByuserId(pageNumber, postContent.PageSize,CurrentUser()?.Id)
+//       .then((data) => {
+//         console.log('data to ram ji', data);
+//         // Only append posts that are not already in Contents to avoid duplicates
+//         setPostContent((prevState) => ({
+//           Contents: pageNumber === 1 ? data.Contents : [...prevState.Contents, ...data.Contents],
+//           //if page ===1 then use "data.Contents" directly else use "[...prevState.Contents, ...data.Contents]" to append with existing data.  
+//           LastPage: data.LastPage,
+//           PageNumber: data.PageNumber,
+//           PageSize: data.PageSize,
+//           TotalElements: data.TotalElements,
+//           TotalPages: data.TotalPages
+//         }));
+//       })
+//       .catch((error) => {
+//         toast.error('Error in loading posts pagewise');
+//       });
+//   };
+
+//   const changePageInfinite = () => {
+//     // Increment the current page to load the next page of content
+
+//     if (currentPage < postContent.TotalPages || postContent.TotalPages === 0) {
+//       setCurrentPage((prevPage) => prevPage + 1);
+//     }
+//   };
+ 
+
+  
+//function to delete post
+function DoDeletePost(post){
+//going to delete post
+ console.log(post);
+ DeletePost(post)
+      .then(data => {
+
+         console.log('Post Deleted successfully', data);
+         toast.success("Post Deleted successfully!");
+        let newpostContent=postContentusingContextApi.Contents.filter(p=>p.Id!=post.Id)
+         //we are passing p,coz using filter we will get one by one Id from "postContentusingContextApi.Contents",this will filter those Id's which are not belongs to "post.Id"
+         setPostContent({...postContentusingContextApi,Contents:newpostContent})
+
+      })
+      .catch((error) => {
+        toast.error("Post creation failed!");
+      });
+}
+
+
+
+//
+
+
+
+  return (
+    <Base>
+    <Container>
+
+
+         <AddPost onPostCreated={changePage(1)}/>
+
+
+           <div className="container-fluid">
+      <Row>
+        <Col md={{ size: 12}}>
+         {/* <h3>Blogs Count ({postContentusingContextApi?.Contents?.length})</h3> */}
+          <h3 style={{color:'green',fontSize:'18px'}} >Blogs Count ({postContentusingContextApi?.Contents?.length?postContentusingContextApi?.Contents?.length:0})</h3>
+
+          <InfiniteScroll
+            dataLength={postContepostContentusingContextApint?.Contents?.length}
+            next={changePageInfiniteusingContextApi}
+            hasMore={postContentusingContextApi?.PageNumber < postContentusingContextApi?.TotalPages || postContentusingContextApi?.TotalPages === 0}
+            loader={<h4>Loading...</h4>}
+            endMessage={
+              <p style={{ textAlign: 'center' }}>
+                <b>Yay! You have seen it all</b>
+              </p>
+            }
+           >
+            {postContentusingContextApi?.Contents?.map((post) => (
+              <Posts post={post} key={post.Id} DoDeletePost ={DoDeletePost } />
+            ))}
+          </InfiniteScroll>
+        </Col>
+      </Row>
+    </div>
+
+
+    </Container>
+
+    </Base>
+  )
+}
+
+export default Userdashboard
