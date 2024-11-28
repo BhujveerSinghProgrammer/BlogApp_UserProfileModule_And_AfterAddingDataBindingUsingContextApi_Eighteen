@@ -86,3 +86,6 @@ step 3:- CustomeNavBar.jsx:-
 
 
 
+step 4:- create a component under component-->ViewUserProfile.jsx:-
+ViewUserProfile.jsx:-
+

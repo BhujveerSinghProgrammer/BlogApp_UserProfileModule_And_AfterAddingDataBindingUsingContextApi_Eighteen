@@ -1,15 +1,22 @@
 import React, { useContext, useEffect, useState } from 'react'
 import Base from '../../components/Base'
-import { Card, CardBody, CardText, Col, Container, Row } from 'reactstrap';
 import { json, Link, useParams } from 'react-router-dom'
 import { toast } from 'react-toastify';
-
 import userContext from '../../context/userContext';
 import { loadUserDetailsById } from '../../services/user-service';
+import ViewUserProfile from '../../components/ViewUserProfile';
+
 function Profileinfo() {
   const {Id}=useParams();
 // const object=useContext(userContext);
-   const[user,setUser]=useState(null);
+   const[user,setUser]=useState({
+Id:'',
+name:'',
+email:'',
+about:'',
+ImageName:'',
+ImageUrl:''
+   });
 
 
     // Loading Details...
@@ -18,56 +25,26 @@ function Profileinfo() {
       .then((data) => {
         console.log('Datas:', data);
         setUser(data);
+        console.log('userwa',user);
       })
       .catch((error) => {
         console.log(error);
         toast.error('Error in Loading Comments');
       });
-  }, []);
+  }, [Id]);
 
-
-  const userView=()=>
+  const userView=()=>{
+    return(
+      <div>
+          <ViewUserProfile user={user}/>
+      </div>
+    )
+  
+  }
 
   return (
     <Base>
-      <Container className='mt-5 mb-5'>
-     <Link to="/">Home</Link>
-<Row>
-  <Col md={
-    {
-      size:12
-    }
-  }
->
-   <Card>
-      <CardBody>
- <CardText>
-<h6  style={{color:"red"}} >
-
-          Welcome user:{user && user.name && user.name }
-          </h6>
-          <h6  style={{color:"blue"}} >
-          Email-{user && user.email && user.email }
-          </h6>
-        <p>
-         <span  style={{color:"Green",fontSize:'18px'}} >About:-</span>{user && user.about && user.about } 
-        </p>
-
-        
-{useContextData.user.login && user.Id==post.userId?
-<Button onClick={()=>DoDeletePost(post)} color='danger'  className='ms-2' style={{ height: '19px ',width: '76px ',padding: '0px ', fontSize:'11px',color:'Yellow'}}>Delete</Button> :''
-}
-
-
-         
-   </CardText>
-      </CardBody>
-
-     </Card>
-</Col>
-</Row>
-</Container>
-  
+       { user ? userView:'Loading user Data...'}
     </Base>
   )
 }
